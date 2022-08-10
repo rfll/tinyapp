@@ -24,7 +24,7 @@ app.use(cookieParser());
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-  console.log(req.body); // Log the POST request body to the console
+  // console.log(req.body); // Log the POST request body to the console
   res.redirect(`/urls/${shortURL}`); // Respond with 'Ok' (we will replace this)
 });
 
