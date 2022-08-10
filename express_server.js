@@ -18,6 +18,13 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`); // Respond with 'Ok' (we will replace this)
 });
 
+// Delete key-value pair from urlDatabase when delete button clicked
+app.post("/urls/:id/delete", (req, res) => {
+  // console.log(req.params.id);
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+})
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -45,6 +52,7 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Shortened URLs will redirect to longURL site
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
@@ -55,7 +63,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-
+// Generate a string of 6 random characters
 function generateRandomString() {
   const characters = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
   let randomString = '';
