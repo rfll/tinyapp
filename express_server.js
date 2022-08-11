@@ -44,9 +44,28 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const username = req.body.username;
-  // console.log(username);
-  res.cookie("username", username);
+  // const id = generateRandomString();
+  const enterEmail = req.body.email;
+  const enterPassword = req.body.password;
+
+  const findEmail = getUserByEmail(enterEmail, users);
+  const findPassword = getUserByEmail(enterEmail, users).password;
+  const findID = getUserByEmail(enterEmail, users).id;
+
+  if (!getUserByEmail(enterEmail, users)) {
+
+    return res.sendStatus(403);
+  } 
+  
+  if (findPassword !== enterPassword) {
+
+    return res.sendStatus(403);
+  } 
+  
+  users[findID] = { id: findID, email: enterEmail, password: findPassword };
+  console.log(users);
+
+  res.cookie("user_id", findID);
   res.redirect("/urls");
 });
 
@@ -67,7 +86,7 @@ app.post("/register", (req, res) => {
   if (!enterEmail) {
     return res.sendStatus(403);
   }
-  if (!password) {
+  if (!enterPassword) {
     return res.sendStatus(403);
   }
   
@@ -107,7 +126,7 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: req.cookies['user_id']
+    user: users[req.cookies['user_id']]
   };
   res.render("urls_new", templateVars);
 });
@@ -115,8 +134,8 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   const templateVars = { id: req.params.id, longURL: longURL,
-    user: req.cookies['user_id'] };
-  console.log("username = ", req.cookies['username']);
+    user: users[req.cookies['user_id']] };
+
   res.render("urls_show", templateVars);
 });
 
@@ -131,6 +150,13 @@ app.get("/register", (req, res) => {
     user: req.cookies['user_id']
   };
   res.render("urls_register", templateVars);
+});
+
+app.get("/login", (req, res) => {
+  const templateVars = { 
+    user: req.cookies['user_id']
+  };
+  res.render("urls_login", templateVars);
 });
 
 
@@ -163,3 +189,13 @@ const getUserByEmail = function(testEmail, userObj) {
   }
   return null;
 };
+
+// // Helper function to search for user password
+// const getUserPassword = function(testEmail, userObj) {
+//   for (let key in userObj) {
+//     if (users[key].email === testEmail) {
+//       return users[key].password;
+//     }  
+//   }
+//   return null;
+// };
