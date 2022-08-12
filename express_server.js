@@ -2,7 +2,9 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
+
+const cookieSession = require('cookie-session');
 
 const bcrypt = require("bcryptjs");
 
@@ -29,7 +31,11 @@ const users = {
 
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+// app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}))
 
 
 // Post functions
@@ -37,7 +43,7 @@ app.use(cookieParser());
 app.post("/urls", (req, res) => {
 
   const templateVars = { 
-    user: req.cookies['user_id']
+    user: req.session['user_id']
   };
 
   // Error message if user is not logged in and uses cURL to create URL 
@@ -50,7 +56,7 @@ app.post("/urls", (req, res) => {
   // Create tiny URL and store with user's id
   urlDatabase[shortURL] = { 
     longURL: req.body.longURL,
-    userID: req.cookies['user_id']
+    userID: req.session['user_id']
   };
 
   // console.log(urlDatabase);
@@ -62,7 +68,7 @@ app.post("/urls", (req, res) => {
 // Delete key and corresponding object from urlDatabase
 app.post("/urls/:id/delete", (req, res) => {
   const id = urlDatabase[req.params.id];
-  const user = req.cookies['user_id'];
+  const user = req.session['user_id'];
   const url = urlsForUser(user, urlDatabase);
 
   if (!id) {
@@ -78,7 +84,7 @@ app.post("/urls/:id/delete", (req, res) => {
   }
 
   const templateVars = { 
-    user: req.cookies['user_id']
+    user: req.session['user_id']
   };
 
   if (!templateVars.user) {
@@ -93,7 +99,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 app.post("/urls/:id", (req, res) => {
   const id = urlDatabase[req.params.id];
-  const user = req.cookies['user_id'];
+  const user = req.session['user_id'];
   const url = urlsForUser(user, urlDatabase);
 
   if (!id) {
@@ -137,17 +143,18 @@ app.post("/login", (req, res) => {
   users[findID] = { id: findID, email: enterEmail, password: findPassword };
   // console.log(users);
 
-  res.cookie("user_id", findID);
+  // res.cookie("user_id", findID);
+  req.session['user_id'] = users[findID].id;
   res.redirect("/urls");
 });
 
 
 app.post("/logout", (req, res) => {
   const templateVars = {
-    user: req.cookies['user_id']
+    user: req.session['user_id']
   };
   // console.log(templateVars);
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/urls");
 });
 
@@ -174,7 +181,8 @@ app.post("/register", (req, res) => {
   users[id] = { id, email: enterEmail, password: hashedPassword };
   
   console.log('users after register: ', users);
-  res.cookie("user_id", id);
+  // res.cookie("user_id", id);
+  req.session['user_id'] = users[id].id;
   res.redirect("/urls");
 });
 
@@ -195,13 +203,13 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls", (req, res) => {
 
-  const id = req.cookies['user_id'];
+  const id = req.session['user_id'];
 
   const url = urlsForUser(id, urlDatabase);
 
    const templateVars = { 
     urls: url,
-    user: users[req.cookies['user_id']] 
+    user: users[req.session['user_id']]
   };
 
   if (!templateVars.user) {
@@ -217,7 +225,7 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: users[req.cookies['user_id']]
+    user: users[req.session['user_id']]
   }
 
   if (!templateVars.user) {
@@ -234,7 +242,7 @@ app.get("/urls/:id", (req, res) => {
     return res.status(400).send('Page not found!');
   }
 
-  const id = req.cookies['user_id'];
+  const id = req.session['user_id'];
   const url = urlsForUser(id, urlDatabase);
   const longURL = urlDatabase[req.params.id].longURL;
 
@@ -243,7 +251,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = { 
     id: req.params.id, 
     longURL: longURL,
-    user: users[req.cookies['user_id']],
+    user: users[req.session['user_id']],
   };
 
   if (!templateVars.user) {
@@ -276,7 +284,7 @@ app.get("/u/:id", (req, res) => {
 
 app.get("/register", (req, res) => {
   const templateVars = { 
-    user: req.cookies['user_id']
+    user: req.session['user_id']
   };
 
   if (templateVars.user) {
@@ -289,13 +297,13 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const templateVars = { 
-    user: req.cookies['user_id']
+    user: req.session['user_id']
   };
-  // console.log('44444');
+  
   if (templateVars.user) {
     return res.redirect("/urls");
   }
-  // console.log('5555');  
+    
   res.render("urls_login", templateVars);
 });
 
