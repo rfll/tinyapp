@@ -4,6 +4,8 @@ const PORT = 8080; // default port 8080
 
 const cookieParser = require("cookie-parser");
 
+const bcrypt = require("bcryptjs");
+
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -112,24 +114,26 @@ app.post("/urls/:id", (req, res) => {
 
 
 app.post("/login", (req, res) => {
-  // const id = generateRandomString();
+  
   const enterEmail = req.body.email;
   const enterPassword = req.body.password;
 
   const findEmail = getUserByEmail(enterEmail, users);
-  const findPassword = getUserByEmail(enterEmail, users).password;
-  const findID = getUserByEmail(enterEmail, users).id;
-
+  
   if (!getUserByEmail(enterEmail, users)) {
 
     return res.sendStatus(403);
   } 
-  
-  if (findPassword !== enterPassword) {
+
+  const findPassword = getUserByEmail(enterEmail, users).password;
+
+  if (!bcrypt.compareSync(enterPassword, findPassword)) {
 
     return res.sendStatus(403);
   } 
-  
+
+  const findID = getUserByEmail(enterEmail, users).id;
+
   users[findID] = { id: findID, email: enterEmail, password: findPassword };
   // console.log(users);
 
@@ -165,11 +169,11 @@ app.post("/register", (req, res) => {
     return res.sendStatus(409);
   }
 
-  users[id] = { id, email: enterEmail, password: enterPassword};
+  const hashedPassword = bcrypt.hashSync(enterPassword, 10);
+
+  users[id] = { id, email: enterEmail, password: hashedPassword };
   
-  // console.log(users);
-  // console.log("email is: ", email);
-  // console.log("password is: ", password);
+  console.log('users after register: ', users);
   res.cookie("user_id", id);
   res.redirect("/urls");
 });
