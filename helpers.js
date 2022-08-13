@@ -3,7 +3,7 @@ const getUserByEmail = function(userEmail, userObj) {
   for (let key in userObj) {
     if (userObj[key].email === userEmail) {
       return userObj[key];
-    }  
+    }
   }
   return null;
 };
@@ -18,7 +18,7 @@ const urlsForUser = function(id, urls) {
     if (urls[key].userID === id) {
       urlsByUser[key] = urls[key];
     }
-  } 
+  }
   return urlsByUser;
 };
 
