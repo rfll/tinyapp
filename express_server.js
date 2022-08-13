@@ -14,24 +14,8 @@ app.use(cookieSession({
 }));
 
 const { getUserByEmail, urlsForUser, generateRandomString } = require('./helpers');
+const { urlDatabase, users } = require('./data');
 
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: '1Gdj72'
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: '1Gdj72'
-  }
-};
-const users = {
-  '1Gdj72': {
-    id: '1Gdj72',
-    email: 'email@email.com',
-    password: '$2a$10$.bRtwIYdHqAbd4ZLJNJpHuObUJCI4I/mI/fkrtXIyGY6yEm8oVt/O'
-  }
-};
 
 // Post functions
 // Create tiny URL
@@ -146,6 +130,17 @@ app.post("/register", (req, res) => {
 
 
 // Get functions
+// Root url
+app.get("/", (req, res) => {
+  const templateVars = {
+    user: req.session['user_id']
+  };
+  if (!templateVars.user) {
+    return res.redirect("/login");
+  }
+  res.redirect("/urls");
+});
+
 // Url index
 app.get("/urls", (req, res) => {
   const id = req.session['user_id'];
